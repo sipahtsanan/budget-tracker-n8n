@@ -12,14 +12,14 @@ An automated personal income and expense tracker built with **n8n**, using a web
 ### n8n Workflow Overview
 <img src="Example workflow.png" width="600"/>
 
-### Form Submission Result (JSON)
+### Form Submission Result (Table)
 <img src="After submit form_result example.png" width="600"/>
-
-### Google Sheets Output
-<img src="Excel sheet_example.png" width="600"/>
 
 ### JSON Result from n8n
 <img src="Json_result example.png" width="600"/>
+
+### Google Sheets Output
+<img src="Excel sheet_example.png" width="600"/>
 
 ---
 
