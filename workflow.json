@@ -1,0 +1,244 @@
+{
+  "name": "Budget Tracker",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "บันทึกรายรับ-รายจ่าย",
+        "formDescription": "กรอกข้อมูลการใช้จ่ายของคุณ",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "date",
+              "fieldType": "date",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "type",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  { "option": "income" },
+                  { "option": "expense" }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "category",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  { "option": "food" },
+                  { "option": "travel" },
+                  { "option": "salary" },
+                  { "option": "shopping" },
+                  { "option": "donate" },
+                  { "option": "other" }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "amount",
+              "fieldType": "number",
+              "placeholder": "จำนวนเงิน (ไม่ต้องใส่ ฿)",
+              "defaultValue": "0",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "note",
+              "placeholder": "หมายเหตุเพิ่มเติม (optional)"
+            }
+          ]
+        },
+        "options": {
+          "buttonLabel": "Submit"
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [0, -96],
+      "id": "e0140c22-ad68-40bf-8542-c710cb910da8",
+      "name": "On form submission",
+      "webhookId": "YOUR_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "832b9c4f-d16d-44b4-a13d-902f20bfc626",
+              "name": "date",
+              "value": "={{ $json.date }}",
+              "type": "string"
+            },
+            {
+              "id": "ed7162a7-43ba-412e-9c4d-aab5bdc28fb2",
+              "name": "type",
+              "value": "={{ $json.type }}",
+              "type": "string"
+            },
+            {
+              "id": "5f1d7d5a-d9e7-4e53-bfd8-c808af097bc5",
+              "name": "category",
+              "value": "={{ $json.category }}",
+              "type": "string"
+            },
+            {
+              "id": "5877a286-4be9-4edd-be97-3c07f3d35eea",
+              "name": "amount",
+              "value": "={{ $json.amount }}",
+              "type": "number"
+            },
+            {
+              "id": "bb1f9133-8480-4fff-a0a2-11b44e7f028b",
+              "name": "note",
+              "value": "={{ $json.note }}",
+              "type": "string"
+            },
+            {
+              "id": "ddab954d-7492-433d-9807-43c47f09b7bd",
+              "name": "created_at",
+              "value": "={{ $json.submittedAt }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [208, -96],
+      "id": "5c3c21c1-3bc1-45af-bc49-fa6f93c7ac7a",
+      "name": "Set fields"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_SPREADSHEET_NAME",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "YOUR_SHEET_NAME",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SPREADSHEET_ID/edit#gid=0"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "detectAutomatically"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [384, 32],
+      "id": "47dd8f8d-68f8-4dd5-8af3-77b1dc459ee1",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "YOUR_GOOGLE_SHEETS_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const existingRows = $('Get row(s) in sheet').all();\n\nlet lastRunningTotal = 0;\n\nfor (let i = existingRows.length - 1; i >= 0; i--) {\n  const val = parseFloat(existingRows[i].json.running_total);\n  if (!isNaN(val) && existingRows[i].json.running_total !== '') {\n    lastRunningTotal = val;\n    break;\n  }\n}\n\nconst newItem = $('Set fields').first().json;\nconst amount = parseFloat(newItem.amount);\nconst balance_change = newItem.type === 'income' ? amount : -amount;\nconst running_total = lastRunningTotal + balance_change;\n\nreturn [{\n  json: {\n    date: newItem.date,\n    type: newItem.type,\n    category: newItem.category,\n    amount: amount,\n    note: newItem.note,\n    created_at: newItem.created_at,\n    balance_change: balance_change,\n    running_total: running_total,\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [592, 32],
+      "id": "925c31c3-fe20-4c90-b185-d80d0ccfe177",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SPREADSHEET_ID/edit?usp=sharing",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "YOUR_SHEET_NAME",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SPREADSHEET_ID/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "date": "={{ $json.date }}",
+            "category": "={{ $json.category }}",
+            "note": "={{ $json.note }}",
+            "amount": "={{ $json.amount }}",
+            "type": "={{ $json.type }}",
+            "created_at": "={{ $json.created_at }}",
+            "balance_change": "={{ $json.balance_change }}",
+            "running_total": "={{ $json.running_total }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            { "id": "date", "displayName": "date", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "type", "displayName": "type", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "category", "displayName": "category", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "amount", "displayName": "amount", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "note", "displayName": "note", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "created_at", "displayName": "created_at", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "balance_change", "displayName": "balance_change", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true, "removed": false },
+            { "id": "running_total", "displayName": "running_total", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true, "removed": false }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [800, 32],
+      "id": "aa11845b-7e5d-483c-aa62-d28b7a4ba290",
+      "name": "Add data to income_expenses sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "YOUR_GOOGLE_SHEETS_CREDENTIAL_NAME"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [[{ "node": "Set fields", "type": "main", "index": 0 }]]
+    },
+    "Set fields": {
+      "main": [[{ "node": "Get row(s) in sheet", "type": "main", "index": 0 }]]
+    },
+    "Get row(s) in sheet": {
+      "main": [[{ "node": "Code in JavaScript", "type": "main", "index": 0 }]]
+    },
+    "Code in JavaScript": {
+      "main": [[{ "node": "Add data to income_expenses sheet", "type": "main", "index": 0 }]]
+    },
+    "Add data to income_expenses sheet": {
+      "main": [[]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "id": "YOUR_WORKFLOW_ID",
+  "tags": []
+}
