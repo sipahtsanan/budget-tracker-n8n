@@ -7,19 +7,19 @@ An automated personal income and expense tracker built with **n8n**, using a web
 ## 📸 Screenshots
 
 ### Web Form (Input)
-![Form Example](images/Form_example.png)
+<img src="Form_example.png" width="600"/>
 
 ### n8n Workflow Overview
-![Example Workflow](images/Example_workflow.png)
+<img src="Example workflow.png" width="600"/>
 
 ### Form Submission Result (JSON)
-![After Submit](images/After_submit_form_result_example.png)
+<img src="After submit form_result example.png" width="600"/>
 
 ### Google Sheets Output
-![Excel Sheet Example](images/Excel_sheet_example.png)
+<img src="Excel sheet_example.png" width="600"/>
 
 ### JSON Result from n8n
-![JSON Result](images/Json_result_example.png)
+<img src="Json_result example.png" width="600"/>
 
 ---
 
